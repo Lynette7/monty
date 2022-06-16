@@ -1,46 +1,95 @@
 #include "monty.h"
+#include "lists.h"
 
 /**
- * push - adds data to the top of the stack
- * breaks string into series of tokens using delimeter
- * @stack: indicating a doubly linkedlist
- * @line_number: the number line
+ * get_func - selects the right function
+ * @parsed: line from the bytecode file passed to main
  *
- * Description: check paraams params variable against input strings
- * then, locate stack beased on the order of input arguements
- * Return: Nothing.
+ * Return: pointer to the selected function, or NULL on failure
  */
-void push(stack_t **stack, unsigned int line_number)
+void (*get_func(char **parsed))(stack_t **, unsigned int)
 {
-	register int num;
-	char *params = strtok(NULL, "\n");
+	instruction_t func_arr[] = {
+		{"push", push_handler},
+		{"pall", pall_handler},
+		{"pint", pint_handler},
+		{"pop", pop_handler},
+		{"swap", swap_handler},
+		{"add", add_handler},
+		{"nop", nop_handler},
+		{"sub", sub_handler},
+		{"div", div_handler},
+		{"mul", mul_handler},
+		{"mod", mod_handler},
+		{"pchar", pchar_handler},
+		{"pstr", pstr_handler},
+		{"rotl", rotl_handler},
+		{"rotr", rotr_handler},
+		{"stack", stack_handler},
+		{"queue", queue_handler},
+		{NULL, NULL}
+	};
 
-	if (check_string(params) == -1)
+	int codes = 17, i;
+
+	for (i = 0; i < codes; i++)
 	{
-		fprintf(stderr, "L%u: usage push integer \n", line_number);
-		cleaner();
+		if (strcmp(func_arr[i].opcode, parsed[0]) == 0)
+		{
+			return (func_arr[i].f);
+		}
+	}
+	return (NULL);
+}
+
+/**
+ * push_handler - handles the push instruction
+ * @stack: double pointer to the stack to push to
+ * @line_number: number of the line in the file
+ */
+void push_handler(stack_t **stack, unsigned int line_number)
+{
+	stack_t *new;
+	int num = 0, i;
+
+	if (data.words[1] == NULL)
+	{
+		dprintf(STDERR_FILENO, PUSH_FAIL, line_number);
+		free_all(1);
 		exit(EXIT_FAILURE);
 	}
-	num = atoi(params);
-	if (args.order == 1)
+
+	for (i = 0; data.words[1][i]; i++)
 	{
-		add_dnodeint(stack, num);
+		if (isalpha(data.words[1][i]) != 0)
+		{
+			dprintf(STDERR_FILENO, PUSH_FAIL, line_number);
+			free_all(1);
+			exit(EXIT_FAILURE);
+		}
 	}
-	else
+	num = atoi(data.words[1]);
+
+	if (data.qflag == 0)
+		new = add_dnodeint(stack, num);
+	else if (data.qflag == 1)
+		new = add_dnodeint_end(stack, num);
+	if (!new)
 	{
-		add_dnodeint_end(stack, num);
+		dprintf(STDERR_FILENO, MALLOC_FAIL);
+		free_all(1);
+		exit(EXIT_FAILURE);
 	}
 }
 
 /**
- * pall - prints everything in stack
- * @stack: doubly linked list
- * @line_number: the line
- *
- * Return: Nothing.
+ * pall_handler - handles the pall instruction
+ * @stack: double pointer to the stack to push to
+ * @line_number: number of the line in the file
  */
-void pall(stack_t **stack, unsigned int line_number)
+void pall_handler(stack_t **stack, unsigned int line_number)
 {
 	(void)line_number;
-	print_dlistint(*stack);
+	if (*stack)
+		print_dlistint(*stack);
 }

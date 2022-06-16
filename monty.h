@@ -124,7 +124,7 @@ void queue_handler(stack_t **stack, unsigned int line_number);
 void pchar_handler(stack_t **stack, unsigned int line_number);
 void pstr_handler(stack_t **stack, unsigned int line_number);
 
-/* strtow.c */
+/* strops.c */
 int count_word(char *s);
 char **strtow(char *str);
 void free_everything(char **args);
